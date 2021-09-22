@@ -1,0 +1,38 @@
+Simple disease incidence 
+Buck CE, Cavanagh WG, & Litton CD (1996) Bayesian approach to interpreting archaeological data.  Wiley: Chichester
+p146-159 and 169
+
+© Andrew Millard 2001 
+
+model{
+p ~ dbeta(alpha,beta)  #  prior on underlying prevelance
+d ~ dbin(p, n)  # likelihood of d observed cases in n excavated skeletons
+}
+
+Data
+
+Case I limited excavation (p146-148)
+list(alpha=1, beta=1,d=3, n=5)
+alpha=1, beta=1 gives a uniform (0,1) prior on p
+
+
+
+Case II larger excavation (p149)
+list(alpha=1, beta=1,d=15, n=25)
+
+Case III limited excavation with informative prior (p 149-152)
+list(alpha=3, beta=3,d=3, n=5)
+
+Case IV revision of belief after second excavation (p169)
+list(alpha=4, beta=3, d=12, n=20)
+alpha=4, beta=3 represents the posterior from Case I
+
+alternatively we can code both data sets into one model, with exactly the same result:
+
+model{
+p ~ dbeta(alpha,beta)  #  prior on underlying prevelance
+d[1] ~ dbin(p, n[1])  # likelihood of d observed cases in n excavated skeletons
+d[2] ~ dbin(p, n[2])
+
+}
+list(alpha=1, beta=1, d=c(3,12), n=c(5,20))

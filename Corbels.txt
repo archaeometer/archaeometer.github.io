@@ -1,0 +1,93 @@
+Corbels: a changepoint problem
+
+
+Based on Buck CE, LItton CD, & Stephens DA (1993) Detecting a change in the shape of a prehistoric corbelled tomb. Statistician 42 (4) 483-490.
+
+© Andrew Millard 2003 
+
+Model 1 has a different set of parameters to Model 2 which is closer to the formulae in the original paper.  Both give the same results, and agree with the published ones, giving confidence that convergence has been achieved, despite slow mixing.
+
+model { #1
+	for( i in 1 : N ) {
+		ln.Y[i] <- log(Y[i])
+		b[i] <- beta[J[i]]
+		ln.Y[i] ~ dnorm(mu[i],tau)
+		mu[i] <- alpha.prime + b[i] * (log(x[i] + delta) - log(gamma + delta))
+		J[i] <- 1 + step(x[i] - gamma)
+	}
+	alpha.prime ~ dnorm(0.0,1.0E-6)
+	for( j in 1 : 2 ) {
+		beta[j] ~ dnorm(0.0,1.0E-6)
+	}
+	gamma ~ dunif(x[2], x[N-1])
+	delta ~ dunif(0, 0.34)  
+	tau ~ dgamma(0.1,0.001)
+	sigma <- 1 / sqrt(tau)
+}
+
+Data
+
+  list(Y = c(0.40, 0.53, 0.70, 0.90, 1.06, 1.16, 1.26, 1.36, 1.47, 1.62, 1.67, 1.68, 
+                  1.77, 1.82, 1.89, 1.96, 2.00, 2.05, 2.10, 2.10, 2.14, 2.13, 2.15, 2.14),
+   x = c(0.04, 0.24, 0.44, 0.64, 0.84, 1.04, 1.24, 1.44, 1.64, 1.84, 2.04, 2.24, 
+             2.44, 2.64, 2.84, 3.04, 3.24, 3.44, 3.64, 3.84, 4.04, 4.24, 4.44, 4.64), 
+N = 24)
+
+Inits
+
+     list(alpha.prime = 0, beta = c(0.75, 0.4), gamma=2, delta =0.17, tau = 1000)
+	
+Results 
+	 node	 mean	 sd	 MC error	2.3%	median	97.7%	start	sample
+	alpha.prime	0.4781	0.0598	0.004918	0.3335	0.48	0.6046	1001	10000
+	beta[1]	0.7459	0.05087	0.003235	0.6374	0.7481	0.8407	1001	10000
+	beta[2]	0.375	0.04236	0.002944	0.2764	0.3771	0.4535	1001	10000
+	delta	0.2704	0.04263	0.002371	0.1782	0.274	0.3367	1001	10000
+	gamma	1.837	0.2206	0.01813	1.373	1.832	2.374	1001	10000
+	sigma	0.03198	0.005496	1.279E-4	0.02318	0.03127	0.04527	1001	10000
+	tau	1060.0	343.7	7.742	487.9	1023.0	1861.0	1001	10000
+
+
+	model #2
+	{
+	   for( i in 1 : N ) {
+		ln.Y[i] <- log(Y[i])
+		b[i] <- beta[J[i]]
+		a[i] <- ln.alpha[J[i]]
+		ln.Y[i] ~ dnorm(mu[i],tau)
+		mu[i] <- a[i] + b[i] * log(x[i] + delta) 
+		J[i] <- 1 + step(x[i] - gamma)
+	   }
+	   for( j in 1 : 2 ) {
+	      ln.alpha[j] ~ dnorm(0.0,1.0E-6)
+	   }
+	   beta[1] ~ dnorm(0.0,1.0E-6)
+	   beta[2] <- beta[1] + (ln.alpha[1]-ln.alpha[2])/log(gamma+delta)
+	   gamma ~ dunif(x[2], x[N-1])
+	   delta  ~dunif(0, 0.34)  
+	   tau ~ dgamma(0.001,0.001)
+	   sigma.sq <- 1 / (tau)
+	}
+
+Data
+
+  list(Y = c(0.40, 0.53, 0.70, 0.90, 1.06, 1.16, 1.26, 1.36, 1.47, 1.62, 1.67, 1.68, 
+                  1.77, 1.82, 1.89, 1.96, 2.00, 2.05, 2.10, 2.10, 2.14, 2.13, 2.15, 2.14),
+   x = c(0.04, 0.24, 0.44, 0.64, 0.84, 1.04, 1.24, 1.44, 1.64, 1.84, 2.04, 2.24, 
+             2.44, 2.64, 2.84, 3.04, 3.24, 3.44, 3.64, 3.84, 4.04, 4.24, 4.44, 4.64), 
+N = 24)
+
+Inits
+
+     list(ln.alpha =c(0, 0.5), beta = c(0.75, NA), gamma=2,, tau = 1000, delta =0.17)
+	
+Results 
+	 node	 mean	 sd	 MC error	2.3%	2.5%	median	97.5%	97.7%	start	sample
+	beta[1]	0.7479	0.04887	0.004187	0.6475	0.6492	0.7521	0.8317	0.8328	501	10500
+	beta[2]	0.3674	0.0448	0.002998	0.2649	0.2682	0.3703	0.4495	0.4511	501	10500
+	delta	0.275	0.04097	0.003461	0.1889	0.1903	0.28	0.336	0.3362	501	10500
+	gamma	1.88	0.2304	0.01826	1.379	1.397	1.87	2.407	2.422	501	10500
+	ln.alpha[1]	-0.07751	0.03679	0.003054	-0.1385	-0.138	-0.08011	-0.004239	-0.003098	501	10500
+	ln.alpha[2]	0.2136	0.06035	0.004252	0.09992	0.1014	0.209	0.3496	0.3532	501	10500
+	sigma.sq	0.001053	3.751E-4	8.089E-6	5.405E-4	5.475E-4	9.785E-4	0.001976	0.00201	501	10500
+	tau	1059.0	341.0	7.184	497.5	506.0	1022.0	1827.0	1850.0	501	10500

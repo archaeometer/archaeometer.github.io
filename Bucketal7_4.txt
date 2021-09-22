@@ -1,0 +1,22 @@
+Consumerland revisited
+Buck CE, Cavanagh WG, & Litton CD (1996) Bayesian approach to interpreting archaeological data.  Wiley: Chichester. p154-159 
+
+© Andrew Millard 2001 
+
+A simple mixture model.  M is the  number of mugs, N is total  mugs + goblets, p.B is prior probability of being a bar.
+alpha[i] and beta[i] summarise the expert's prior judgement about the proportions of mugs at bars (i=1) and restaurants (i=2)
+
+model{
+	for ( i in 1:2){
+		pM[i] ~ dbeta(alpha[i],beta[i])
+	}
+	M ~ dbin(pM[shrine],N)
+	B ~ dbern(p.B)  # mean of this node is posterior probability of being a bar
+	R <- 1 - B           # mean of this node is posterior probability of being a restaurant
+	shrine <-  2 - B
+
+}
+
+
+DATA
+list(alpha=c(13,3.6667), beta=c(4,5), M=2, N=5, p.B=0.6667)

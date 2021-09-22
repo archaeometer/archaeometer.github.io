@@ -1,0 +1,45 @@
+Christen-Nicholls radiocarbon calibration curve model
+Christen JA & Nicholls G (2000) Random walk radiocarbon calibration. Technical Report #457, Mathematics Department, University of Auckland, New Zealand.    http://www.math.auckland.ac.nz/~nicholls/linkfiles/papers/rwcn00.ps.gz
+
+© Andrew Millard 2003
+
+
+model{
+	for (t in L:U-1) {
+		M[t+1] ~ dnorm(M[t],Tau)
+	}
+	M[L] ~ dnorm(0,0.000001)
+	Tau <- 1/pow(Sigma,2)
+	for (i in 1:nPoints){
+		C14BP[i] ~ dnorm(M[calBP[i]], prec[i])
+		prec[i] <- 1/pow(S[i],2)
+	}
+}
+
+DATA
+list(U=800, L=600, nPoints=20, Sigma=7.9)
+
+fragment of INTCAL98 calibration curve
+calBP[]	C14BP[]	S[]
+605	596.5	13.4
+615	566	11.5
+625	607.5	11.9
+635	620.1	11.5
+645	623.5	9.7
+655	684.6	14.9
+665	715.6	14.4
+675	767.1	19.1
+685	774.1	13.1
+695	801.8	12.7
+705	803.3	18.7
+715	814.1	13
+725	804.6	10.5
+735	842.1	16
+745	869	16.1
+755	853.2	16
+765	876.8	15.4
+775	883.7	12.2
+785	868.4	10.2
+795	929.1	12.4
+END
+
