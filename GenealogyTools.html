@@ -78,8 +78,12 @@ Use this to convert the js to encoded html for a draggable link https://www.web2
     <p>
         To install drag this link to your bookmark or favourites toolbar or right-click and add it to your bookmarks or favourites: 
         <a href="javascript:(function(){ /* bookmarklet to change location fields in Wikitree */ var target = new RegExp(/[,\s]+London[,\s]+England/,&quot;i&quot;); var replacement = &quot;, Middlesex, England&quot;; var oldBirthLocation = document.getElementById(&quot;mBirthLocation&quot;).value; if (oldBirthLocation.search(target) == -1) { alert(&quot;Target location not found.&quot;); } else { var newBirthLocation = oldBirthLocation.replace(target, replacement); document.getElementById(&quot;mBirthLocation&quot;).value = newBirthLocation; document.getElementById(&quot;wpSummary&quot;).value = &quot;Standardise county following England Project Standards.&quot;; document.getElementById(&quot;wpSave&quot;).disabled = false; } })();">LND2MDX</a>.
-        This bookmarklet has been tested in Firefox, Chrome and Edge browsers in Windows 10.
+        This bookmarklet has been tested in Firefox, Chrome, and Edge browsers in Windows 10.
     </p>
+    <p>
+        To use it, open the edit tab of a profile, click on the bookmark, and it should make the changes detailed above.
+    </p>
+
 
   <p class="footer">
     Page last updated: 2025-02-22.
