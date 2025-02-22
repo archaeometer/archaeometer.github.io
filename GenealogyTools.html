@@ -68,9 +68,21 @@ Use this to convert the js to encoded html for a draggable link https://www.web2
         You can copy and paste the paragraphs from the screen version into Wikitree or use the saved file. If you refresh your browser the 
         screen display will revert to the original narrative report, as the text file exported from TMG is left unchanged.
     </p>
-        
+  <hr>        
+      <h2>Automatically change location fields in Wikitree</h2>
+    <p>
+        This javascript bookmarklet will find " London, England" in the birth location field, replaces it with " Middlesex, England" 
+        and write "Standardise county following England Project Standards." into the change explanation.  If that is all that needs 
+        changing then all the user has to do is scroll down and click on Full Save. 
+    </p>
+    <p>
+        To install drag this link to your bookmark or favourites toolbar or right-click and add it to your bookmarks or favourites: 
+        <a href="javascript:(function(){ /* bookmarklet to change location fields in Wikitree */ var target = new RegExp(/[,\s]+London[,\s]+England/,&quot;i&quot;); var replacement = &quot;, Middlesex, England&quot;; var oldBirthLocation = document.getElementById(&quot;mBirthLocation&quot;).value; if (oldBirthLocation.search(target) == -1) { alert(&quot;Target location not found.&quot;); } else { var newBirthLocation = oldBirthLocation.replace(target, replacement); document.getElementById(&quot;mBirthLocation&quot;).value = newBirthLocation; document.getElementById(&quot;wpSummary&quot;).value = &quot;Standardise county following England Project Standards.&quot;; document.getElementById(&quot;wpSave&quot;).disabled = false; } })();">LND2MDX</a>.
+        This bookmarklet has been tested in Firefox, Chrome and Edge browsers in Windows 10.
+    </p>
+
   <p class="footer">
-    Page last updated: 2022-03-27.
+    Page last updated: 2025-02-22.
   </p>
 </body>
 </html>
