@@ -83,7 +83,18 @@ Use this to convert the js to encoded html for a draggable link https://www.web2
     <p>
         To use it, open the edit tab of a profile, click on the bookmark, and it should make the changes detailed above.
     </p>
-
+<hr>
+  <h2>Open Wikitree profile from its id</h2>
+    <p>
+        This javascript bookmarklet will open a Wikitree profile in a new tab if the Wikitree id is highlighted on the current webpage, or if no text is highlighted it will prompt for the id. This is useful to go straight to a profile if an id is quoted on G2G or Discord without a link.
+    </p>
+    <p>
+        To install drag this link to your bookmark or favourites toolbar or right-click and add it to your bookmarks or favourites: 
+        <a href="
+javascript:Qr=window.getSelection?window.getSelection().toString():document.selection.createRange().text;if(!Qr){void(Qr=prompt('Enter%20WikiTree%20id:',''))};if(Qr.match(/[^%C3%A0-%C3%BC%C3%80-%C3%9C\w-]/)!=null){alert('Invalid%20id%20format%20.')}else{window.open('https://www.wikitree.com/wiki/'+escape(Qr));void(0)}
+">WTid</a>.
+        This bookmarklet has been tested in Firefox, Chrome, and Edge browsers in Windows 10.
+    </p>
 
   <p class="footer">
     Page last updated: 2025-02-22.
