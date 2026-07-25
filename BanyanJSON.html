@@ -1,0 +1,80 @@
+<html>
+<head>
+	<title>Banyan JSON file manipulation</title>
+</head>
+<body>
+<h1>Convert BanyanDNA validations to hypothesis tests</h1>
+<p>Choose your Banyan DNA file.</p>
+<p>	
+	<input type="file" name="inputfile" id="inputfile">
+</p>
+
+
+	<div id="output"></div>
+
+	<script type="text/javascript">
+	function getKeys(obj) {
+	var keys = [];
+		for (let key in obj) {
+			keys[keys.length] = key; // gets the current key name
+		}
+	return(keys);
+	}
+
+		document.getElementById('inputfile')
+			.addEventListener('change', function () {
+
+				let fr = new FileReader();
+				fr.onload = function () {
+					proj = JSON.parse(fr.result);
+					var calcName = [];
+					var timestamp = [];
+					var chi_square = [];
+					var roundChiSq = [];
+					var num_trials = [];
+					var calcType = [];
+					var dof = [];
+					var pvalue = [];
+					var odds = [];
+					var roundOdds = [];
+					var partOdds = [];
+					var sumPartOdds = 0;
+					var prob = [];
+					var percentProb = [];
+					for (i=0; i<proj.calculations.length; i++){
+						calcName[i] = proj.calculations[i].name;
+						timestamp[i] = proj.calculations[i].timestamp.substr(0,16).replace("T"," ");
+						num_trials[i] = proj.calculations[i].results.models[0].num_trials;
+						calcType[i] = proj.calculations[i].calcType;
+						chi_square[i] = proj.calculations[i].results.models[0].chi_square;
+						roundChiSq[i] = parseFloat(chi_square[i].toPrecision(4));
+						dof[i] = proj.calculations[i].results.models[0].dof;
+						pvalue[i] = proj.calculations[i].results.models[0].chi_square_probability.toFixed(3);
+						partOdds[i] = Math.exp( 0.5 * (dof[i] - chi_square[i]) );
+						sumPartOdds = sumPartOdds + partOdds[i];
+					}
+					for (i=0; i<proj.calculations.length; i++){
+						prob[i] = partOdds[i]/sumPartOdds;
+						percentProb[i] = (100*prob[i]).toFixed(2)
+						odds[i] = partOdds[i]/Math.min(...partOdds);
+						roundOdds[i] = parseFloat(odds[i].toPrecision(3));
+					}
+					document.getElementById('output').innerHTML = 
+						"<table>\n" + 
+						"<tr> <th> </th> <th>" + calcName.join("</th> <th>") + "</th> </tr> \n" +
+						"<tr> <th>Timestamp</th> <td>" + timestamp.join("</td> <td>") + "</td> </tr> \n" +
+						"<tr> <th>Number of trials</th> <td>" + num_trials.join("</td> <td>") + "</td> </tr> \n" +
+						"<tr> <th>Type</th> <td>" + calcType.join("</td> <td>") + "</td> </tr> \n" +
+						"<tr> <th>Chi-square</th> <td>" + roundChiSq.join("</td> <td>") + "</td> </tr> \n" +
+						"<tr> <th>Number of measurements</th> <td>" + dof.join("</td> <td>") + "</td> </tr> \n" +
+						"<tr> <th>p-value</th> <td>" + pvalue.join("</td> <td>") + "</td> </tr> \n" +
+						"<tr> <th>Odds</th> <td>" + roundOdds.join("</td> <td>") + "</td> </tr> \n" + 
+						"<tr> <th>Bayesian probability (%)</th> <td>" + percentProb.join("</td> <td>") + "</td> </tr> \n" +
+						"</table>\n";
+				}
+
+				fr.readAsText(this.files[0]);
+			})
+	</script>
+</body>
+</html>
