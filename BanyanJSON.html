@@ -26,8 +26,8 @@
 	var partOdds = [];
 	var prob = [];
 	var percentProb = [];
-	var excludeBox = [];
-	var excludedHyp = [];
+	var includeBox = [];
+	var includedHyp = [];
 	var oddsCell = [];
 	var probCell = [];
 
@@ -43,26 +43,26 @@
 		var sumPartOdds = 0;
 		var minPartOdds = Infinity;
 		for (i=0; i<proj.calculations.length; i++){
-			if (!excludedHyp[i]) {
+			if (includedHyp[i]) {
 				sumPartOdds = sumPartOdds + partOdds[i];
 				minPartOdds = Math.min(minPartOdds,partOdds[i]);
 			}
 		}
 		for (i=0; i<proj.calculations.length; i++){
-			if (excludedHyp[i]){
-				prob[i] = null;
-				percentProb[i] = null;
-				odds[i] = null;
-				roundOdds[i] = null;
-			} else {
+			if (includedHyp[i]){
 				prob[i] = partOdds[i]/sumPartOdds;
 				percentProb[i] = (100*prob[i]).toFixed(2);
 				odds[i] = partOdds[i]/minPartOdds;
 				roundOdds[i] = parseFloat(odds[i].toPrecision(3));
+			} else {
+				prob[i] = null;
+				percentProb[i] = null;
+				odds[i] = null;
+				roundOdds[i] = null;
 			};
 		}
 	}
-	function makeTable(){
+	function makeOutput(){
 		document.getElementById('output').innerHTML = 
 			"<table><tbody>\n" + 
 			"<tr> <th> </th> <th>" + calcName.join("</th> <th>") + "</th> </tr> \n" +
@@ -72,15 +72,15 @@
 			"<tr> <th>Chi-square</th> <td>" + roundChiSq.join("</td> <td>") + "</td> </tr> \n" +
 			"<tr> <th>Number of measurements</th> <td>" + dof.join("</td> <td>") + "</td> </tr> \n" +
 			"<tr> <th>p-value</th> <td>" + pvalue.join("</td> <td>") + "</td> </tr> \n" +
-			"<tr> <th>Exclude</th> <td>" + excludeBox.join("</td> <td>") + "</td> </tr> \n" +
-			"<tr> <th>Odds</th>" + oddsCell.join() + " </tr> \n" + 
-			"<tr> <th>Bayesian probability (%)</th>" + probCell.join() + " </tr> \n" +
+			"<tr> <th>Include</th> <td>" + includeBox.join("</td> <td>") + "</td> </tr> \n" +
+			"<tr> <th>Odds</th>" + oddsCell.join("") + " </tr> \n" + 
+			"<tr> <th>Bayesian probability (%)</th>" + probCell.join("") + " </tr> \n" +
 			"</tbody></table>\n";
 			for (i=0; i<proj.calculations.length; i++){
-				document.getElementById('excludebox' + i)
+				document.getElementById('includebox' + i)
 					.addEventListener('change', function () {
 					var hyp = parseInt(this.id.substring(10));
-					excludedHyp[hyp] = this.checked;
+					includedHyp[hyp] = this.checked;
 					calcOdds(partOdds);
 					updateTable();
 				})
@@ -110,11 +110,11 @@
 						partOdds[i] = Math.exp( 0.5 * (dof[i] - chi_square[i]) );
 						oddsCell[i] = '<td id="oddsCell'+i+'"></td>';
 						probCell[i] = '<td id="probCell'+i+'"></td>';
-						excludeBox[i] = '<input type="checkbox" id="excludebox' + i + '">';
-						excludedHyp[i] = false;
+						includeBox[i] = '<input type="checkbox" id="includebox' + i + '" checked="true">';
+						includedHyp[i] = true;
 					}
 					calcOdds(partOdds);
-					makeTable();
+					makeOutput();
 					updateTable();
 				}
 				fr.readAsText(this.files[0]);
