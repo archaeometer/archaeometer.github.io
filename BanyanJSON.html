@@ -8,136 +8,35 @@ body {margin: 5%;}
 h1 {color:purple;
     background-color:lightgray;
     text-align: center;}
-* {font-familY: sans-serif;}
+* {font-family: sans-serif;}
 em {background-color:lightgray;}
+.amberwarning {background-color:lightpink;}
+.redwarning {background-color:palevioletred;}
 .footer {background-color:Thistle;
          text-align: center;}
+.tdcentre {vertical-align: middle;
+           text-align: center;}
 </style>
 </head>
 
 <body>
 <h1>Convert BanyanDNA validations to hypothesis tests</h1>
+<noscript>To use this site, please enable JavaScript.</noscript>
 <p>Choose your BanyanDNA json file.</p>
 <p>	
 	<input type="file" name="inputfile" id="inputfile">
 </p>
 
+<div id="OddsTable"></div>
 
-<div id="output"></div>
+<div id="Matches"></div>
 
-	<script type="text/javascript">
-	var calcName = [];
-	var timestamp = [];
-	var chi_square = [];
-	var roundChiSq = [];
-	var num_trials = [];
-	var calcType = [];
-	var dof = [];
-	var pvalue = [];
-	var odds = [];
-	var roundOdds = [];
-	var partOdds = [];
-	var prob = [];
-	var percentProb = [];
-	var includeBox = [];
-	var includedHyp = [];
-	var oddsCell = [];
-	var probCell = [];
+<div id="Scores"></div>
 
-	function getKeys(obj) {
-	var keys = [];
-		for (let key in obj) {
-			keys[keys.length] = key; // gets the current key name
-		}
-	return(keys);
-	}
-
-	function calcOdds(partOdds) {
-		var sumPartOdds = 0;
-		var minPartOdds = Infinity;
-		for (i=0; i<proj.calculations.length; i++){
-			if (includedHyp[i]) {
-				sumPartOdds = sumPartOdds + partOdds[i];
-				minPartOdds = Math.min(minPartOdds,partOdds[i]);
-			}
-		}
-		for (i=0; i<proj.calculations.length; i++){
-			if (includedHyp[i]){
-				prob[i] = partOdds[i]/sumPartOdds;
-				percentProb[i] = (100*prob[i]).toFixed(2);
-				odds[i] = partOdds[i]/minPartOdds;
-				roundOdds[i] = parseFloat(odds[i].toPrecision(3));
-			} else {
-				prob[i] = null;
-				percentProb[i] = null;
-				odds[i] = null;
-				roundOdds[i] = null;
-			};
-		}
-	}
-	function makeOutput(){
-		document.getElementById('output').innerHTML = 
-			"<table><tbody>\n" + 
-			"<tr> <th> </th> <th>" + calcName.join("</th> <th>") + "</th> </tr> \n" +
-			"<tr> <th>Timestamp</th> <td>" + timestamp.join("</td> <td>") + "</td> </tr> \n" +
-			"<tr> <th>Number of trials</th> <td>" + num_trials.join("</td> <td>") + "</td> </tr> \n" +
-			"<tr> <th>Type</th> <td>" + calcType.join("</td> <td>") + "</td> </tr> \n" +
-			"<tr> <th>Chi-square</th> <td>" + roundChiSq.join("</td> <td>") + "</td> </tr> \n" +
-			"<tr> <th>Number of measurements</th> <td>" + dof.join("</td> <td>") + "</td> </tr> \n" +
-			"<tr> <th>p-value</th> <td>" + pvalue.join("</td> <td>") + "</td> </tr> \n" +
-			"<tr> <th>Include</th> <td>" + includeBox.join("</td> <td>") + "</td> </tr> \n" +
-			"<tr> <th>Odds</th>" + oddsCell.join("") + " </tr> \n" + 
-			"<tr> <th>Bayesian probability (%)</th>" + probCell.join("") + " </tr> \n" +
-			"</tbody></table>\n";
-			for (i=0; i<proj.calculations.length; i++){
-				document.getElementById('includebox' + i)
-					.addEventListener('change', function () {
-					var hyp = parseInt(this.id.substring(10));
-					includedHyp[hyp] = this.checked;
-					calcOdds(partOdds);
-					updateTable();
-				})
-			}
-	}
-	function updateTable(){
-		for (i=0; i<proj.calculations.length; i++){
-			document.getElementById('oddsCell'+i).innerHTML = roundOdds[i];
-			document.getElementById('probCell'+i).innerHTML = percentProb[i];
-		}
-
-	}
-
-		document.getElementById('inputfile').addEventListener('change', function () {
-				let fr = new FileReader();
-				fr.onload = function () {
-					proj = JSON.parse(fr.result);
-					for (i=0; i<proj.calculations.length; i++){
-						calcName[i] = proj.calculations[i].name;
-						timestamp[i] = proj.calculations[i].timestamp.substr(0,16).replace("T"," ");
-						num_trials[i] = proj.calculations[i].results.models[0].num_trials;
-						calcType[i] = proj.calculations[i].calcType;
-						chi_square[i] = proj.calculations[i].results.models[0].chi_square;
-						roundChiSq[i] = parseFloat(chi_square[i].toPrecision(4));
-						dof[i] = proj.calculations[i].results.models[0].dof;
-						pvalue[i] = proj.calculations[i].results.models[0].chi_square_probability.toFixed(3);
-						partOdds[i] = Math.exp( 0.5 * (dof[i] - chi_square[i]) );
-						oddsCell[i] = '<td id="oddsCell'+i+'"></td>';
-						probCell[i] = '<td id="probCell'+i+'"></td>';
-						includeBox[i] = '<input type="checkbox" id="includebox' + i + '" checked="true">';
-						includedHyp[i] = true;
-					}
-					calcOdds(partOdds);
-					makeOutput();
-					updateTable();
-				}
-				fr.readAsText(this.files[0]);
-				
-			})
-			
-	</script>
 
   <p class="footer">
-    Page last updated: 2026-07-27.
+    Page last updated: 2026-07-30.
   </p>
+<script src="BanyanJSON.js"></script> 
 </body>
 </html>
