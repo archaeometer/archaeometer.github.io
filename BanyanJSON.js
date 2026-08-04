@@ -212,6 +212,31 @@ function displayManipulator(){
 			}
 		}
 	);
+
+}
+
+function displayColoursTable(){
+	var coloursTableContent = "<table><tbody>\n" + 
+		"<tr> <th> Parent 1 </th> <th> Parent 2 </th> <th> Children </th>" + 
+		"<th> Colour </th> <th> Apply to descendants </th> <th> Apply to ancestors of parent 1 </th> <th> Apply to ancestors of parent 2 </th> </tr> \n";
+	for (i=0;i<proj.families.length;i++){
+		var parents = personDetails(getKeys(proj.families[i].parents));
+		if (parents[1]==undefined) 
+			var parentTwo = '</td> <td class="tdtop">';
+		else
+			var parentTwo = parents[1] +' </td> <td class="tdtop">';
+		var colour = proj.families[i].color.split("-").at(-1).replace(")","");
+		coloursTableContent += '<tr> <td class="tdtop">' + 
+			parents[0] + ' </td> <td class="tdtop">' + parentTwo  +
+			personDetails(getKeys(proj.families[i].children)).join('<br> ') + 
+			' </td> <td class="tdcentre">' + makeColourSelector(colour,i) +
+			' </td> <td class="tdcentre">' + '<input type="checkbox" id="desc' + i + '">' +
+			' </td> <td class="tdcentre">' + '<input type="checkbox" id="ancOne' + i + '">' +
+			' </td> <td class="tdcentre">' + '<input type="checkbox" id="ancTwo' + i + '">' +
+			'</td> </tr> \n' ;
+	}
+	coloursTableContent += '</tbody></table>\n';
+	document.getElementById('coloursTable').innerHTML = coloursTableContent;
 	// make listeners for colour updates
 	for (i=0;i<proj.families.length;i++){
 		document.getElementById('colourSelector' + i).addEventListener('change', 
@@ -238,30 +263,6 @@ function displayManipulator(){
 			setColour(getKeys(proj.families), this.value);
 		}
 	);
-}
-
-function displayColoursTable(){
-	var coloursTableContent = "<table><tbody>\n" + 
-		"<tr> <th> Parent 1 </th> <th> Parent 2 </th> <th> Children </th>" + 
-		"<th> Colour </th> <th> Apply to descendants </th> <th> Apply to ancestors of parent 1 </th> <th> Apply to ancestors of parent 2 </th> </tr> \n";
-	for (i=0;i<proj.families.length;i++){
-		var parents = personDetails(getKeys(proj.families[i].parents));
-		if (parents[1]==undefined) 
-			var parentTwo = '</td> <td class="tdtop">';
-		else
-			var parentTwo = parents[1] +' </td> <td class="tdtop">';
-		var colour = proj.families[i].color.split("-").at(-1).replace(")","");
-		coloursTableContent += '<tr> <td class="tdtop">' + 
-			parents[0] + ' </td> <td class="tdtop">' + parentTwo  +
-			personDetails(getKeys(proj.families[i].children)).join('<br> ') + 
-			' </td> <td class="tdtop">' + makeColourSelector(colour,i) +
-			' </td> <td class="tdtop">' + '<input type="checkbox" id="desc' + i + '">' +
-			' </td> <td class="tdtop">' + '<input type="checkbox" id="ancOne' + i + '">' +
-			' </td> <td class="tdtop">' + '<input type="checkbox" id="ancTwo' + i + '">' +
-			'</td> </tr> \n' ;
-	}
-	coloursTableContent += '</tbody></table>\n';
-	document.getElementById('coloursTable').innerHTML = coloursTableContent;
 }
 
 
