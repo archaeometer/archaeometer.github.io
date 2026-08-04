@@ -13,8 +13,8 @@ var includeBox = [];
 var includedHyp = [];
 var oddsCell = [];
 var probCell = [];
+var projRef;
 var proj;
-var projNew;
 var projFileName;
 
 // General functions
@@ -28,36 +28,13 @@ function getKeys(obj) {
 }
 
 function findName(nodeId) {
-	var names = [];
-	if (!Array.isArray(nodeId)) var nodeId = [nodeId];
-	for (k=0;k<nodeId.length;k++){
-		for (j=0;j<proj.nodes.length;j++){
-			if (nodeId[k]==proj.nodes[j].nodeId) {
-				names[k] = proj.nodes[j].name;
-				break;
-			}
+	for (j=0;j<proj.nodes.length;j++){
+		if (nodeId==proj.nodes[j].nodeId) {
+			var name = proj.nodes[j].name;
+			break;
 		}
 	}
-	return(names);
-}
-
-function findSex(nodeIds) {
-	var sexes = [];
-	if (!Array.isArray(nodeIds)) var nodeIds = [nodeIds];
-	for (k=0;k<nodeIds.length;k++){
-		for (j=0;j<proj.nodes.length;j++){
-			if (nodeIds[k]==proj.nodes[j].nodeId) {
-				if (proj.nodes[j].sex=="Male")  
-					sexes[k] = "&male;";
-				else if (proj.nodes[j].sex=="Female")  
-					sexes[k] = "&female;";
-				else
-					sexes[k] = "&#9893;";
-				break;
-			}
-		}
-	}
-	return(sexes);
+	return(name);
 }
 
 // Statistics section functions
@@ -65,21 +42,19 @@ function findSex(nodeIds) {
 function updateOddsTable(partOdds) {
 	var sumPartOdds = 0;
 	var minPartOdds = Infinity;
-	var roundOdds;
-	var percentProb;
 	for (i=0; i<proj.calculations.length; i++){
 		if (includedHyp[i]) {
-			sumPartOdds = sumPartOdds + partOdds[i];
+			sumPartOdds += partOdds[i];
 			minPartOdds = Math.min(minPartOdds,partOdds[i]);
 		}
 	}
 	for (i=0; i<proj.calculations.length; i++){
 		if (includedHyp[i]){
-			percentProb = (100*partOdds[i]/sumPartOdds).toFixed(2);
-			roundOdds = parseFloat((partOdds[i]/minPartOdds).toPrecision(3));
+			var percentProb = (100*partOdds[i]/sumPartOdds).toFixed(2);
+			var roundOdds = parseFloat((partOdds[i]/minPartOdds).toPrecision(3));
 		} else {
-			percentProb = null;
-			roundOdds = null;
+			var percentProb = null;
+			var roundOdds = null;
 		};
 		document.getElementById('oddsCell'+i).innerHTML = roundOdds;
 		document.getElementById('probCell'+i).innerHTML = percentProb;
@@ -120,34 +95,35 @@ function displayScores(){
 		"<table><tbody>\n" + 
 		"<tr> <th> Person 1 </th> <th> Person 2 </th> <th> Shared cM</th> <th>" + 
 		calcName.join("</th> <th>") + "</th> </tr> \n";
-	for (i=0;i<scoreData[0].length;i++){
-		scoreTable += "<tr> <td>" + 
-			scoreData[0][i].p1.split("@@")[0] + "</td> <td>" +
-			scoreData[0][i].p2.split("@@")[0] + "</td> <td>" +
-			scoreData[0][i].data_actual + "</td>"  ;
-			for (j=0;j<proj.calculations.length;j++){
-				var rels = [];
-				for (k=0;k<scoreData[j][i].relationships.length;k++)
-					rels[k] = scoreData[j][i].relationships[k].abbrev;
-				var score = scoreData[j][i].tval;
-				if (Math.abs(score) > 2) {
-					var warnMarkupStart = '<span class="redwarning"><strong>';
-					var warnMarkupEnd = '</strong></span>';
-				} else if (Math.abs(score) > 1) {
-					var warnMarkupStart = '<span class="amberwarning"><em>';
-					var warnMarkupEnd = '</em></span>';
-				} else {
-					var warnMarkupStart = '';
-					var warnMarkupEnd = '';
-				} 
-				scoreTable += '<td class="tdcentre">' + rels.join("+") + "<br> " + 
-					warnMarkupStart + score.toFixed(2) + " &sigma;" + warnMarkupEnd + " </td>";
-			}
-		scoreTable += "</tr> \n";
+	if (scoreData.length>0){
+		for (i=0;i<scoreData[0].length;i++){
+			scoreTable += "<tr> <td>" + 
+				scoreData[0][i].p1.split("@@")[0] + "</td> <td>" +
+				scoreData[0][i].p2.split("@@")[0] + "</td> <td>" +
+				scoreData[0][i].data_actual + "</td>"  ;
+				for (j=0;j<proj.calculations.length;j++){
+					var rels = [];
+					for (k=0;k<scoreData[j][i].relationships.length;k++)
+						rels[k] = scoreData[j][i].relationships[k].abbrev;
+					var score = scoreData[j][i].tval;
+					if (Math.abs(score) > 2) {
+						var warnMarkupStart = '<span class="redwarning"><strong>';
+						var warnMarkupEnd = '</strong></span>';
+					} else if (Math.abs(score) > 1) {
+						var warnMarkupStart = '<span class="amberwarning"><em>';
+						var warnMarkupEnd = '</em></span>';
+					} else {
+						var warnMarkupStart = '';
+						var warnMarkupEnd = '';
+					} 
+					scoreTable += '<td class="tdcentre">' + rels.join("+") + "<br> " + 
+						warnMarkupStart + score.toFixed(2) + " &sigma;" + warnMarkupEnd + " </td>";
+				}
+			scoreTable += "</tr> \n";
+		}
 	}
 	scoreTable += "</tbody></table>\n";
 	document.getElementById('Scores').innerHTML = scoreTable;
-
 }
 
 function personDetails(nodeIds){
@@ -155,19 +131,19 @@ function personDetails(nodeIds){
 	var result="";
 	if (!Array.isArray(nodeIds)) var nodeIds = [nodeIds];
 	for (k=0;k<nodeIds.length;k++){
-		for (j=0;j<projNew.nodes.length;j++){
-		if (nodeIds[k]==projNew.nodes[j].nodeId) {
-				if (projNew.nodes[j].sex=="Male")  
+		for (j=0;j<proj.nodes.length;j++){
+		if (nodeIds[k]==proj.nodes[j].nodeId) {
+				if (proj.nodes[j].sex=="Male")  
 					sex = "&male;";
-				else if (projNew.nodes[j].sex=="Female")  
+				else if (proj.nodes[j].sex=="Female")  
 					sex = "&female;";
 				else
 					sex = "&#9893;";
-				if (projNew.nodes[j].birthYear==undefined) birth = ""; 
+				if (proj.nodes[j].birthYear==undefined) birth = ""; 
 					else birth = ", b." + proj.nodes[j].birthYear;
-				if (projNew.nodes[j].deathYear==undefined) death = "";
+				if (proj.nodes[j].deathYear==undefined) death = "";
 					else death = ", d." + proj.nodes[j].deathYear;
-				details[k] = projNew.nodes[j].name + " (" + sex + birth + death +")";
+				details[k] = proj.nodes[j].name + " (" + sex + birth + death +")";
 				break;
 			}
 		}
@@ -191,16 +167,19 @@ function displayManipulator(){
 		"<h3> Download </h3>" +
 		'<p> <button onclick="downloadProject()">Download modified project</button> </p>';
 	document.getElementById('Manipulator').innerHTML = familyTable;
-	document.getElementById('coloursTable').innerHTML = makeColoursTable();
+	displayColoursTable();
 	// make listeners for bulk changes
 	document.getElementById('deleteCalcs').addEventListener('change', 
 		function () {
 			if (this.checked) {
-				projNew.calculations = []; 
+				proj.calculations = []; 
+				displayScores();
 				console.log("Calculations removed");
 			}
 			if (!this.checked) {
-				projNew.calculations = proj.calculations;
+				proj.calculations = structuredClone(projRef.calculations);
+				if (document.getElementById('anonymise').checked) anonNames();
+				displayScores();
 				console.log("Calculations reinstated");
 			}
 		}
@@ -208,11 +187,11 @@ function displayManipulator(){
 	document.getElementById('deleteMatches').addEventListener('change', 
 		function () {
 			if (this.checked) {
-				projNew.matchData = [];
+				proj.matchData = [];
 				console.log("Match data removed");
 			}
 			if (!this.checked) {
-				projNew.matchData = proj.matchData;
+				proj.matchData = structuredClone(projRef.matchData);
 				console.log("Match data reinstated");
 			}
 		}
@@ -221,10 +200,14 @@ function displayManipulator(){
 		function () {
 			if (this.checked) {
 				anonNames();
+				displayColoursTable();
+				displayScores();
 				console.log("Anonymised");
 			}
 			if (!this.checked) {
 				restoreNames();
+				displayColoursTable();
+				displayScores();
 				console.log("Deanonymised");
 			}
 		}
@@ -257,20 +240,20 @@ function displayManipulator(){
 	);
 }
 
-function makeColoursTable(){
+function displayColoursTable(){
 	var coloursTableContent = "<table><tbody>\n" + 
 		"<tr> <th> Parent 1 </th> <th> Parent 2 </th> <th> Children </th>" + 
 		"<th> Colour </th> <th> Apply to descendants </th> <th> Apply to ancestors of parent 1 </th> <th> Apply to ancestors of parent 2 </th> </tr> \n";
-	for (i=0;i<projNew.families.length;i++){
-		var parents = personDetails(getKeys(projNew.families[i].parents));
+	for (i=0;i<proj.families.length;i++){
+		var parents = personDetails(getKeys(proj.families[i].parents));
 		if (parents[1]==undefined) 
 			var parentTwo = '</td> <td class="tdtop">';
 		else
 			var parentTwo = parents[1] +' </td> <td class="tdtop">';
-		var colour = projNew.families[i].color.split("-").at(-1).replace(")","");
+		var colour = proj.families[i].color.split("-").at(-1).replace(")","");
 		coloursTableContent += '<tr> <td class="tdtop">' + 
 			parents[0] + ' </td> <td class="tdtop">' + parentTwo  +
-			personDetails(getKeys(projNew.families[i].children)).join('<br> ') + 
+			personDetails(getKeys(proj.families[i].children)).join('<br> ') + 
 			' </td> <td class="tdtop">' + makeColourSelector(colour,i) +
 			' </td> <td class="tdtop">' + '<input type="checkbox" id="desc' + i + '">' +
 			' </td> <td class="tdtop">' + '<input type="checkbox" id="ancOne' + i + '">' +
@@ -278,14 +261,14 @@ function makeColoursTable(){
 			'</td> </tr> \n' ;
 	}
 	coloursTableContent += '</tbody></table>\n';
-	return(coloursTableContent);
+	document.getElementById('coloursTable').innerHTML = coloursTableContent;
 }
 
 
 function setColour(f, col){
 	if (!Array.isArray(f)) var f = [f];
 	for (i=0;i<f.length;i++){
-		projNew.families[f[i]].color = "var(--family-color-" + col + ")";
+		proj.families[f[i]].color = "var(--family-color-" + col + ")";
 		document.getElementById('colourSelector' + f[i]).value = col;
 		document.getElementById('colourSelector' + f[i]).style.backgroundColor = col;
 	}
@@ -358,7 +341,7 @@ function makeColourSelector(col, i){
 	var colourSelector = '<select id="colourSelector'+i+'" style="background-color: '+col+'">\n';
 	for (const c of colourList) {
 		if (c==col) 
-			colourSelector += '<option value="' + c + '" style="font-weight:bold; background-color: ' +
+			colourSelector += '<option value="' + c + '" style="background-color: ' +
 				c + '" selected>' + c + '</option>';
 		else 
 			colourSelector += '<option value="' + c + '" style="background-color: ' + 
@@ -369,10 +352,10 @@ function makeColourSelector(col, i){
 }
 
 function resetColours(){
-	document.getElementById('coloursTable').innerHTML = makeColoursTable();
-	for (i=0;i<projNew.families.length;i++){
-		document.getElementById('colourSelectorAll').selectedIndex = -1;
+	for (i=0;i<proj.families.length;i++){
+		proj.families[i].color = structuredClone(projRef.families[i].color);
 	}
+	displayColoursTable();
 	document.getElementById('colourSelectorAll').style.backgroundColor = '';
 }
 
@@ -380,7 +363,7 @@ function anonNames(){
 	var deletedCount = 0;
 	var deletedIds =[];
 	for (i=0;i<proj.nodes.length;i++){
-		projNew.nodes[i].name = "Person " + proj.nodes[i].nodeNumber;
+		proj.nodes[i].name = "Person " + proj.nodes[i].nodeNumber;
 	}
 	for (i=0;i<proj.calculations.length;i++){
 		var scoreData = proj.calculations[i].results.models[0].data;
@@ -391,25 +374,25 @@ function anonNames(){
 			var p2Undefined = true;
 			for (k=0;k<proj.nodes.length;k++){
 				if (proj.nodes[k].nodeId==p1NodeId) {
-					projNew.calculations[i].results.models[0].data[j].p1 = 
-						projNew.nodes[k].name +"@@" + p1NodeId;
+					proj.calculations[i].results.models[0].data[j].p1 = 
+						proj.nodes[k].name +"@@" + p1NodeId;
 					p1Undefined = false;
 				}
 				if (proj.nodes[k].nodeId==p2NodeId) {
-					projNew.calculations[i].results.models[0].data[j].p2 = 
-						projNew.nodes[k].name +"@@" + p2NodeId;
+					proj.calculations[i].results.models[0].data[j].p2 = 
+						proj.nodes[k].name +"@@" + p2NodeId;
 					p2Undefined = false;
 				}
 			}
 			if (p1Undefined) {
 				for (k=0;k<deletedCount+1;k++){
 					if (deletedIds[k] == p1NodeId) {
-						projNew.calculations[i].results.models[0].data[j].p1 = 
+						proj.calculations[i].results.models[0].data[j].p1 = 
 							"Deleted " + (k+1) +"@@" + p1NodeId;
 					} else {
 						deletedIds[deletedCount] = p1NodeId;
 						deletedCount++;
-						projNew.calculations[i].results.models[0].data[j].p1 = 
+						proj.calculations[i].results.models[0].data[j].p1 = 
 							"Deleted " + deletedCount +"@@" + p1NodeId;
 					}
 				}
@@ -417,12 +400,12 @@ function anonNames(){
 			if (p2Undefined) {
 				for (k=0;k<deletedCount+1;k++){
 					if (deletedIds[k] == p2NodeId) {
-						projNew.calculations[i].results.models[0].data[j].p2 = 
+						proj.calculations[i].results.models[0].data[j].p2 = 
 							"Deleted " + (k+1) +"@@" + p2NodeId;
 					} else {
 						deletedIds[deletedCount] = p2NodeId;
 						deletedCount++;
-						projNew.calculations[i].results.models[0].data[j].p2 = 
+						proj.calculations[i].results.models[0].data[j].p2 = 
 							"Deleted " + deletedCount +"@@" + p1NodeId;
 					}
 				}
@@ -433,11 +416,15 @@ function anonNames(){
 
 function restoreNames(){
 	for (i=0;i<proj.nodes.length;i++){
-		projNew.nodes[i].name = proj.nodes[i].name;
+		proj.nodes[i].name = structuredClone(projRef.nodes[i].name);
 	}
 	for (i=0;i<proj.calculations.length;i++){
-		projNew.calculations[i].p1 = proj.calculations[i].p1;
-		projNew.calculations[i].p2 = proj.calculations[i].p2;
+		for (j=0;j<proj.calculations[i].results.models[0].data.length;j++){
+			proj.calculations[i].results.models[0].data[j].p1 = 
+				structuredClone(projRef.calculations[i].results.models[0].data[j].p1);
+			proj.calculations[i].results.models[0].data[j].p2 = 
+				structuredClone(projRef.calculations[i].results.models[0].data[j].p2);
+		}
 	}
 }
 
@@ -462,7 +449,7 @@ function displayMatches(){
 
 
 function downloadProject() {
-    const json = JSON.stringify(projNew); // Pretty-print with 2-space indentation
+    const json = JSON.stringify(proj); // Pretty-print with 2-space indentation
 
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -481,8 +468,8 @@ document.getElementById('inputfile').addEventListener('change', function () {
 	let fr = new FileReader();
 	fr.onload = function () {
 		projFileName = document.getElementById('inputfile').files[0].name;
+		projRef = JSON.parse(fr.result);
 		proj = JSON.parse(fr.result);
-		projNew = JSON.parse(fr.result);
 		for (i=0; i<proj.calculations.length; i++){
 			calcName[i] = proj.calculations[i].name;
 			timestamp[i] = proj.calculations[i].timestamp.substr(0,16).replace("T"," ");
