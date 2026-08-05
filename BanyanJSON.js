@@ -229,10 +229,10 @@ function displayColoursTable(){
 		coloursTableContent += '<tr> <td class="tdtop">' + 
 			parents[0] + ' </td> <td class="tdtop">' + parentTwo  +
 			personDetails(getKeys(proj.families[i].children)).join('<br> ') + 
-			' </td> <td class="tdcentre">' + makeColourSelector(colour,i) +
-			' </td> <td class="tdcentre">' + '<input type="checkbox" id="desc' + i + '">' +
-			' </td> <td class="tdcentre">' + '<input type="checkbox" id="ancOne' + i + '">' +
-			' </td> <td class="tdcentre">' + '<input type="checkbox" id="ancTwo' + i + '">' +
+			' </td> <td class="tdcentretop">' + makeColourSelector(colour,i) +
+			' </td> <td class="tdcentretop">' + '<input type="checkbox" id="desc' + i + '">' +
+			' </td> <td class="tdcentretop">' + '<input type="checkbox" id="ancOne' + i + '">' +
+			' </td> <td class="tdcentretop">' + '<input type="checkbox" id="ancTwo' + i + '">' +
 			'</td> </tr> \n' ;
 	}
 	coloursTableContent += '</tbody></table>\n';
@@ -484,7 +484,7 @@ document.getElementById('inputfile').addEventListener('change', function () {
 			oddsCell[i] = '<td id="oddsCell'+i+'"></td>';
 			probCell[i] = '<td id="probCell'+i+'"></td>';
 			includeBox[i] = '<input type="checkbox" id="includebox' + i + '" checked>';
-			includedHyp[i] = true;
+			if (proj.calculations[i].calcType == "validation") includedHyp[i] = true;
 		}
 		makeOddsTable();
 		updateOddsTable(partOdds);
