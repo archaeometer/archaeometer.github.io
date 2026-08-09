@@ -14,8 +14,13 @@ var includedHyp = [];
 var oddsCell = [];
 var probCell = [];
 var projRef;
+var projText;
 var proj;
 var projFileName;
+var proj2;
+var proj2Text;
+var proj2FileName;
+var newProj;
 
 // General functions
 
@@ -91,7 +96,7 @@ function displayScores(){
 	for (j=0;j<proj.calculations.length;j++)
 		scoreData[j] = proj.calculations[j].results.models[0].data;
 	var scoreTable = "<h2> Scores for matches </h2>\n" +
-		"<p> This table shows the match pairs included in the calculations with the amount of shared DNA in centiMorgans, the relationship(s) under each hypothesis, and the associated deviation from the mean of that relationship in standard deviations (&sigma;). Scores over 1 are highlighted in pink and those over 2 in red. For a correct hypothesis, roughly &frac13; should be over 1, 1 in 20 should be over 2, but only 3 in 1000 should be over 3.</p>" +
+		"<p> This table shows the match pairs included in the calculations with the amount of shared DNA in centiMorgans, the relationship(s) under each hypothesis, and the associated deviation from the mean of that relationship in standard deviations (&sigma;). Scores over 1 are highlighted in <em class=warning1>pink</em>, those over 2 in <em><strong class=warning2>dark pink</strong></em> and those over 3 in <strong class=warning3>red</strong>. For a correct hypothesis, roughly &frac13; should be over 1, 1 in 20 should be over 2, but only 3 in 1000 should be over 3.</p>" +
 		"<table><tbody>\n" + 
 		"<tr> <th> Person 1 </th> <th> Person 2 </th> <th> Shared cM</th> <th>" + 
 		calcName.join("</th> <th>") + "</th> </tr> \n";
@@ -106,12 +111,15 @@ function displayScores(){
 					for (k=0;k<scoreData[j][i].relationships.length;k++)
 						rels[k] = scoreData[j][i].relationships[k].abbrev;
 					var score = scoreData[j][i].tval;
-					if (Math.abs(score) > 2) {
-						var warnMarkupStart = '<span class="redwarning"><strong>';
-						var warnMarkupEnd = '</strong></span>';
+					if (Math.abs(score) > 3) {
+						var warnMarkupStart = '<strong class="warning3">';
+						var warnMarkupEnd = '</strong>';
+					} else if(Math.abs(score) > 2) {
+						var warnMarkupStart = '<em><strong class="warning2">';
+						var warnMarkupEnd = '</strong></em>';
 					} else if (Math.abs(score) > 1) {
-						var warnMarkupStart = '<span class="amberwarning"><em>';
-						var warnMarkupEnd = '</em></span>';
+						var warnMarkupStart = '<em class="warning1">';
+						var warnMarkupEnd = '</em>';
 					} else {
 						var warnMarkupStart = '';
 						var warnMarkupEnd = '';
@@ -164,8 +172,8 @@ function displayManipulator(){
 		'<div id="coloursTable"></div>' +
 		'<p> Change all families to this colour: ' + makeColourSelector("","All") + '</p>' +
 		'<p> <button onclick="resetColours()">Reset colours</button> </p>' +
-		"<h3> Download </h3>" +
-		'<p> <button onclick="downloadProject()">Download modified project</button> </p>';
+		"<h3> Save file </h3>" +
+		'<p> <button onclick="downloadProject(proj)">Save modified project</button> </p>';
 	document.getElementById('Manipulator').innerHTML = familyTable;
 	displayColoursTable();
 	// make listeners for bulk changes
@@ -364,7 +372,9 @@ function anonNames(){
 	var deletedCount = 0;
 	var deletedIds =[];
 	for (i=0;i<proj.nodes.length;i++){
-		proj.nodes[i].name = "Person " + proj.nodes[i].nodeNumber;
+		if (proj.nodes[i].nodeId!=proj.poi) {
+			proj.nodes[i].name = "Person " + proj.nodes[i].nodeNumber;
+		}
 	}
 	for (i=0;i<proj.calculations.length;i++){
 		var scoreData = proj.calculations[i].results.models[0].data;
@@ -447,10 +457,138 @@ function displayMatches(){
 	document.getElementById('Matches').innerHTML = matchTable;
 }
 
+// MERGE FUNCTIONS
 
+function displayMerger(){
+	const positionList = ["not set", "above", "below", "left", "right"];
+	var mergerContent = '<h2> Merge BanyanDNA JSON files </h2>\n' +
+		'<p> Use this section to merge the project above (with any modifications) with a second BanyanDNA JSON file. </p>\n' +
+		'<p> Choose position of second tree relative to first: ' +
+		'<select id="positionSelector">\n';
+	for (const pos of positionList) {
+		mergerContent += '<option value="' + pos + '">' + pos + '</option>\n';
+	}
+	mergerContent += '</select></p>\n' +
+	'<p> Use person of interest from which file: <select id="poiSelector">\n' +
+	'<option value="first" selected>first</option>\n' + 
+	'<option value="second">second</option>\n' + 
+	'</select></p>\n' +
+	'<p> Choose your BanyanDNA json file and merge.</p>' + 
+	'<p> <input type="file" name="inputfile2" id="inputfile2"> </p>';
+	document.getElementById('Merger').innerHTML = mergerContent;
+	document.getElementById('inputfile2').addEventListener('change', function () {
+	let fr = new FileReader();
+	fr.onload = function () {
+		proj2FileName = document.getElementById('inputfile').files[0].name;
+		proj2Text = fr.result;
+		proj2 = JSON.parse(fr.result);
+		mergeProjects();
+	}
+	fr.readAsText(this.files[0]);
+})
 
-function downloadProject() {
-    const json = JSON.stringify(proj); // Pretty-print with 2-space indentation
+}
+
+function distinct(value, index, array) {
+  return array.indexOf(value) === index;
+}
+
+function flatten(arr){
+	newarr = [];
+	for (i=0;i<arr.length;i++){
+		newarr[i] = arr[i][0];
+	}
+	return(newarr);
+}
+
+function mergeProjects(){
+	// find and replace duplicate UUIDs
+	const UUIDregex =/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/g; 
+	var projUUIDs = flatten([...projText.matchAll(UUIDregex)]).filter(distinct);
+	var proj2UUIDs = flatten([...proj2Text.matchAll(UUIDregex)]).filter(distinct);
+	var replaced = [];
+	var k = 0;
+	for (i=0;i<projUUIDs.length;i++){
+		for (j=0;j<proj2UUIDs.length;j++){
+			if (projUUIDs[i]==proj2UUIDs[j]){
+				var newUUID = self.crypto.randomUUID();
+				proj2Text = proj2Text.replaceAll(proj2UUIDs[j],newUUID);
+				replaced[k] = [projUUIDs[i],newUUID];
+				k++;
+			}
+		}
+	}
+	proj2 = JSON.parse(proj2Text);
+	newProj = structuredClone(proj);
+	// adjust node positions 
+	var proj2pos = document.getElementById('positionSelector').value;
+	var projRanges = {xMin: Infinity, xMax: -Infinity, yMin: Infinity, yMax: -Infinity};
+	var proj2Ranges = {xMin: Infinity, xMax: -Infinity, yMin: Infinity, yMax: -Infinity};
+	for (i=0;i<proj.nodePositions.length;i++){
+		projRanges.xMin = Math.min(projRanges.xMin, proj.nodePositions[i].x);
+		projRanges.xMax = Math.max(projRanges.xMax, proj.nodePositions[i].x);
+		projRanges.yMin = Math.min(projRanges.yMin, proj.nodePositions[i].y);
+		projRanges.yMax = Math.max(projRanges.yMax, proj.nodePositions[i].y);
+	}
+	for (i=0;i<proj2.nodePositions.length;i++){
+		proj2Ranges.xMin = Math.min(proj2Ranges.xMin, proj2.nodePositions[i].x);
+		proj2Ranges.xMax = Math.max(proj2Ranges.xMax, proj2.nodePositions[i].x);
+		proj2Ranges.yMin = Math.min(proj2Ranges.yMin, proj2.nodePositions[i].y);
+		proj2Ranges.yMax = Math.max(proj2Ranges.yMax, proj2.nodePositions[i].y);
+	}
+	// calculate shifts to position proj2 relative to proj
+	// origin is top left
+	// constant added to allow for box sizes
+	if (proj2pos == "above") {
+		xshift = 0.5 * (projRanges.xMin + projRanges.xMax - 
+					proj2Ranges.xMin - proj2Ranges.xMax);
+		yshift = projRanges.yMin - proj2Ranges.yMax - 2*60;
+	} else if (proj2pos == "below") {
+		xshift = 0.5 * (projRanges.xMin + projRanges.xMax - 
+					proj2Ranges.xMin - proj2Ranges.xMax);
+		yshift = projRanges.yMax - proj2Ranges.yMin + 2*60;
+	} else if (proj2pos == "right") {
+		xshift = projRanges.xMax - proj2Ranges.xMin + 240;
+		yshift = 0.5 * (projRanges.yMin + projRanges.yMax - 
+					proj2Ranges.yMin - proj2Ranges.yMax);
+	} else if (proj2pos == "left") {
+		xshift = projRanges.xMin - proj2Ranges.xMax - 240;
+		yshift = 0.5 * (projRanges.yMin + projRanges.yMax - 
+					proj2Ranges.yMin - proj2Ranges.yMax);
+	} 
+	console.log("Second project is " + proj2pos + " of first with xshift="+xshift+", yshift="+yshift);
+	// move proj2 nodePositions
+	for (i=0;i<proj2.nodePositions.length;i++){
+		proj2.nodePositions[i].x = proj2.nodePositions[i].x + xshift;
+		proj2.nodePositions[i].y = proj2.nodePositions[i].y + yshift;
+	}
+	// set chosen poi
+	if (document.getElementById('poiSelector').value == "second") {
+		unwantedPoi = proj.poi;
+		newProj.poi = proj2.poi;
+	} else {
+		unwantedPoi = proj2.poi;
+	}
+	for (key in newProj){
+		// merge everything except poi, projectSettings and filters 
+		if (Array.isArray(newProj[key])){ 
+			newProj[key] = newProj[key].concat(proj2[key]);
+		}
+	}
+	// remove unwanted poi node
+	for (i=0;i<newProj.nodes.length;i++){
+		if (unwantedPoi==newProj.nodes[i].nodeId) {
+			newProj.nodes.splice(i, 1);
+			break;
+		}
+	}
+	// NB projectSettings and filters carry over from proj not proj2
+	// report outcomes and create save file button
+	downloadProject(newProj);
+}
+
+function downloadProject(project) {
+    const json = JSON.stringify(project); // Pretty-print with 2-space indentation
 
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -469,6 +607,7 @@ document.getElementById('inputfile').addEventListener('change', function () {
 	let fr = new FileReader();
 	fr.onload = function () {
 		projFileName = document.getElementById('inputfile').files[0].name;
+		projText = fr.result;
 		projRef = JSON.parse(fr.result);
 		proj = JSON.parse(fr.result);
 		for (i=0; i<proj.calculations.length; i++){
@@ -491,6 +630,7 @@ document.getElementById('inputfile').addEventListener('change', function () {
 //		displayMatches();
 		displayScores();
 		displayManipulator();
+		displayMerger();
 	}
 	fr.readAsText(this.files[0]);
 })
