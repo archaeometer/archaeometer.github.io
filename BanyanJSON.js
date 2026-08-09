@@ -539,6 +539,8 @@ function mergeProjects(){
 	// calculate shifts to position proj2 relative to proj
 	// origin is top left
 	// constant added to allow for box sizes
+	var xshift = 0;
+	var yshift = 0;
 	if (proj2pos == "above") {
 		xshift = 0.5 * (projRanges.xMin + projRanges.xMax - 
 					proj2Ranges.xMin - proj2Ranges.xMax);
