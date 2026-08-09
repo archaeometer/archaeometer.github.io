@@ -544,11 +544,11 @@ function mergeProjects(){
 	if (proj2pos == "above") {
 		xshift = 0.5 * (projRanges.xMin + projRanges.xMax - 
 					proj2Ranges.xMin - proj2Ranges.xMax);
-		yshift = projRanges.yMin - proj2Ranges.yMax - 2*60;
+		yshift = projRanges.yMin - proj2Ranges.yMax - 120;
 	} else if (proj2pos == "below") {
 		xshift = 0.5 * (projRanges.xMin + projRanges.xMax - 
 					proj2Ranges.xMin - proj2Ranges.xMax);
-		yshift = projRanges.yMax - proj2Ranges.yMin + 2*60;
+		yshift = projRanges.yMax - proj2Ranges.yMin + 120;
 	} else if (proj2pos == "right") {
 		xshift = projRanges.xMax - proj2Ranges.xMin + 240;
 		yshift = 0.5 * (projRanges.yMin + projRanges.yMax - 
@@ -558,7 +558,7 @@ function mergeProjects(){
 		yshift = 0.5 * (projRanges.yMin + projRanges.yMax - 
 					proj2Ranges.yMin - proj2Ranges.yMax);
 	} 
-	console.log("Second project is " + proj2pos + " of first with xshift="+xshift+", yshift="+yshift);
+	console.log("Second project is " + proj2pos + " first with xshift="+xshift+", yshift="+yshift);
 	// move proj2 nodePositions
 	for (i=0;i<proj2.nodePositions.length;i++){
 		proj2.nodePositions[i].x = proj2.nodePositions[i].x + xshift;
