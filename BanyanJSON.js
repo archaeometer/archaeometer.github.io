@@ -67,7 +67,8 @@ function updateOddsTable(partOdds) {
 }
 
 function makeOddsTable(){
-	document.getElementById('OddsTable').innerHTML = "<h2> Comparison of validation runs </h2>\n" +
+	document.getElementById('OddsTable').innerHTML = "<h2> Convert validation runs to hypothesis tests </h2>\n" +
+		'<p>This table shows the outputs of the validation runs evaluated as alternative hypotheses using the formulae of William H Press & John Hawkins in "Likelihood Models for Forensic Genealogy" (<a href=https://doi.org/10.48550/arXiv.2010.02985">doi:10.48550/arXiv.2010.02985</a>). The Bayesian probabilities assume that all possible hypotheses have been included. Odds are given realtive to the least likely hypothesis in the same manner as in WATO. Validation runs can be included or excluded from the calculations using the tick boxes. Note that the p-values here are what BanyanDNA incorrectly labels as chi-square values. </p>' + 
 		"<table><tbody>\n" + 
 		"<tr> <th> </th> <th>" + calcName.join("</th> <th>") + "</th> </tr> \n" +
 		"<tr> <th>Timestamp</th> <td>" + timestamp.join("</td> <td>") + "</td> </tr> \n" +
@@ -93,6 +94,8 @@ function makeOddsTable(){
 
 function displayScores(){
 	var scoreData = [];
+	var scoreArray = [];
+	var idArray = [];
 	for (j=0;j<proj.calculations.length;j++)
 		scoreData[j] = proj.calculations[j].results.models[0].data;
 	var scoreTable = "<h2> Scores for matches </h2>\n" +
@@ -101,33 +104,42 @@ function displayScores(){
 		"<tr> <th> Person 1 </th> <th> Person 2 </th> <th> Shared cM</th> <th>" + 
 		calcName.join("</th> <th>") + "</th> </tr> \n";
 	if (scoreData.length>0){
-		for (i=0;i<scoreData[0].length;i++){
-			scoreTable += "<tr> <td>" + 
-				scoreData[0][i].p1.split("@@")[0] + "</td> <td>" +
-				scoreData[0][i].p2.split("@@")[0] + "</td> <td>" +
-				scoreData[0][i].data_actual + "</td>"  ;
-				for (j=0;j<proj.calculations.length;j++){
-					var rels = [];
-					for (k=0;k<scoreData[j][i].relationships.length;k++)
-						rels[k] = scoreData[j][i].relationships[k].abbrev;
-					var score = scoreData[j][i].tval;
-					if (Math.abs(score) > 3) {
-						var warnMarkupStart = '<strong class="warning3">';
-						var warnMarkupEnd = '</strong>';
-					} else if(Math.abs(score) > 2) {
-						var warnMarkupStart = '<em><strong class="warning2">';
-						var warnMarkupEnd = '</strong></em>';
-					} else if (Math.abs(score) > 1) {
-						var warnMarkupStart = '<em class="warning1">';
-						var warnMarkupEnd = '</em>';
-					} else {
-						var warnMarkupStart = '';
-						var warnMarkupEnd = '';
-					} 
-					scoreTable += '<td class="tdcentre">' + rels.join("+") + "<br> " + 
-						warnMarkupStart + score.toFixed(2) + " &sigma;" + warnMarkupEnd + " </td>";
+		for (j=0;j<proj.calculations.length;j++){
+			for (i=0;i<scoreData[0].length;i++){
+				var pairId = scoreData[j][i].p1.split("@@")[1]+scoreData[j][i].p2.split("@@")[1];
+				var row = idArray.indexOf(pairId);
+//				console.log("Found "+ pairId + " " + scoreData[j][i].p1.split("@@")[0] + " & " + scoreData[j][i].p2.split("@@")[0] + " in row " + row);
+				if (row == -1) {
+					row = idArray.length;
+					idArray[row] = pairId;
+					scoreArray[row] = Array(proj.calculations.length+3).fill('<td> </td>'); //default for empty cells
+					scoreArray[row][0] = '<td> ' + scoreData[j][i].p1.split("@@")[0] + '</td> ';
+					scoreArray[row][1] = '<td> ' + scoreData[j][i].p2.split("@@")[0] + '</td> ';
+					scoreArray[row][2] = '<td> ' + scoreData[j][i].data_actual + '</td> ';
 				}
-			scoreTable += "</tr> \n";
+				var score = scoreData[j][i].tval;
+				if (Math.abs(score) > 3) {
+					var warnMarkupStart = '<strong class="warning3">';
+					var warnMarkupEnd = '</strong>';
+				} else if(Math.abs(score) > 2) {
+					var warnMarkupStart = '<em><strong class="warning2">';
+					var warnMarkupEnd = '</strong></em>';
+				} else if (Math.abs(score) > 1) {
+					var warnMarkupStart = '<em class="warning1">';
+					var warnMarkupEnd = '</em>';
+				} else {
+					var warnMarkupStart = '';
+					var warnMarkupEnd = '';
+				} 
+				var rels = [];
+				for (k=0;k<scoreData[j][i].relationships.length;k++)
+					rels[k] = scoreData[j][i].relationships[k].abbrev;
+				scoreArray[row][j+3] = '<td class="tdcentre">' + rels.join("+") + '<br> ' + 
+					warnMarkupStart + score.toFixed(2) + ' &sigma;' + warnMarkupEnd + ' </td>';
+			}
+		}
+		for (i=0;i<idArray.length;i++){
+			scoreTable += '<tr> ' + scoreArray[i].join(' ') + '</tr> \n';
 		}
 	}
 	scoreTable += "</tbody></table>\n";
@@ -140,7 +152,7 @@ function personDetails(nodeIds){
 	if (!Array.isArray(nodeIds)) var nodeIds = [nodeIds];
 	for (k=0;k<nodeIds.length;k++){
 		for (j=0;j<proj.nodes.length;j++){
-		if (nodeIds[k]==proj.nodes[j].nodeId) {
+			if (nodeIds[k]==proj.nodes[j].nodeId) {
 				if (proj.nodes[j].sex=="Male")  
 					sex = "&male;";
 				else if (proj.nodes[j].sex=="Female")  
@@ -462,7 +474,7 @@ function displayMatches(){
 function displayMerger(){
 	const positionList = ["not set", "above", "below", "left", "right"];
 	var mergerContent = '<h2> Merge BanyanDNA JSON files </h2>\n' +
-		'<p> Use this section to merge the project above (with any modifications) with a second BanyanDNA JSON file. </p>\n' +
+		'<p> Use this section to merge the project above (including any modifications) with a second BanyanDNA JSON file. </p>\n' +
 		'<p> Choose position of second tree relative to first: ' +
 		'<select id="positionSelector">\n';
 	for (const pos of positionList) {
@@ -473,7 +485,7 @@ function displayMerger(){
 	'<option value="first" selected>first</option>\n' + 
 	'<option value="second">second</option>\n' + 
 	'</select></p>\n' +
-	'<p> Choose your BanyanDNA json file and merge.</p>' + 
+	'<p> Choose your second BanyanDNA json file and merge.</p>' + 
 	'<p> <input type="file" name="inputfile2" id="inputfile2"> </p>';
 	document.getElementById('Merger').innerHTML = mergerContent;
 	document.getElementById('inputfile2').addEventListener('change', function () {
@@ -577,11 +589,13 @@ function mergeProjects(){
 			newProj[key] = newProj[key].concat(proj2[key]);
 		}
 	}
-	// remove unwanted poi node
+	// update nodes: renumber nodeNumber and remove unwanted poi node
 	for (i=0;i<newProj.nodes.length;i++){
 		if (unwantedPoi==newProj.nodes[i].nodeId) {
 			newProj.nodes.splice(i, 1);
-			break;
+			i--;
+		} else {
+			newProj.nodes[i].nodeNumber = i+1;
 		}
 	}
 	// NB projectSettings and filters carry over from proj not proj2
