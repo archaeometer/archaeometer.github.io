@@ -68,7 +68,7 @@ function updateOddsTable(partOdds) {
 
 function makeOddsTable(){
 	document.getElementById('OddsTable').innerHTML = "<h2> Convert validation runs to hypothesis tests </h2>\n" +
-		'<p>This table shows the outputs of the validation runs evaluated as alternative hypotheses using the formulae of William H Press & John Hawkins in "Likelihood Models for Forensic Genealogy" (<a href=https://doi.org/10.48550/arXiv.2010.02985">doi:10.48550/arXiv.2010.02985</a>). The Bayesian probabilities assume that all possible hypotheses have been included. Odds are given realtive to the least likely hypothesis in the same manner as in WATO. Validation runs can be included or excluded from the calculations using the tick boxes. Note that the p-values here are what BanyanDNA incorrectly labels as chi-square values. </p>' + 
+		'<p>This table shows the outputs of the validation runs evaluated as alternative hypotheses using the formulae of William H Press & John Hawkins in "Likelihood Models for Forensic Genealogy" (<a href=https://doi.org/10.48550/arXiv.2010.02985">doi:10.48550/arXiv.2010.02985</a>). The Bayesian probabilities assume that all possible hypotheses have been included. Odds are given relative to the least likely hypothesis in the same manner as in <a href="https://dnapainter.com/tools/probability/">WATO</a>. Validation runs can be included or excluded from the calculations using the tick boxes. Note that the p-values here are what BanyanDNA incorrectly labels as chi-square values. </p>' + 
 		"<table><tbody>\n" + 
 		"<tr> <th> </th> <th>" + calcName.join("</th> <th>") + "</th> </tr> \n" +
 		"<tr> <th>Timestamp</th> <td>" + timestamp.join("</td> <td>") + "</td> </tr> \n" +
