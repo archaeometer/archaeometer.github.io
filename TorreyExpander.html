@@ -78,10 +78,10 @@ h1 {color:purple;
         const torreySourcesLines = torreySourcesText.split('\n');
 
         for (let rawRef of rawRefs) {
-          const refNameMatch = rawRef.split(/\s\d/)[0];
+          const refNameMatch = rawRef.split(/\s[MDCLXVI\d]+/i)[0];
           const safeRefName = escapeRegExp(refNameMatch);
           const regexStr = `</li><li>\\s*(?:<span.+?<\\/span>)*\\s*${safeRefName}:`;
-          const regex = new RegExp(regexStr);
+          const regex = new RegExp(regexStr,'i');
 
           let refSource = "Reference not found. Try a manual search in [[Space:Sources-Torrey|Sources-Torrey]].";
           
