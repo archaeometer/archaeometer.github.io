@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Torrey Entry Expander</title>
+  <style>
+    body {margin: 5%;}
+h1 {color:purple;
+    background-color:lightgray;
+    text-align: center;}
+    * {font-family: sans-serif;}
+    textarea { width: 100%; height: 120px; margin: 0.5rem 0 1rem; padding: 0.5rem; box-sizing: border-box; }
+    button { background: RebeccaPurple; color: white; border: none; padding: 0.5rem 1rem; cursor: pointer; font-size: 1rem; margin-right: 0.5rem; }
+    button:hover { background: MediumPurple; }
+    button:disabled { background: #cccccc; cursor: not-allowed; }
+    #status { margin-top: 1rem; font-weight: bold; color: #28a745; }
+    .error { color: #dc3545 !important; }
+  </style>
+</head>
+<body>
+  <h1>Torrey Entry Expander</h1>
+  <noscript>To use this site, please enable JavaScript.</noscript>
+  <p>
+    This form takes an entry from <a href="https://www.wikitree.com/wiki/Space:Torrey%E2%80%99s_New_England_Marriages_Prior_to_1700">Torrey's <em>New England Marriages Prior to 1700</em></a> and uses <a href=https://www.wikitree.com/wiki/Space:Sources-Torrey">Torrey Source List</a> to expand it with full citations and (where known) links to the Wikitree source pages for the cited books. The output can be pasted in the Research Notes of a Wikitree profile.
+  </p>
+  <h2>Input</h2>
+  <textarea id="inputEntry" placeholder="Paste Torrey entry here..."></textarea>
+  <button id="convertBtn">Convert Entry</button>
+
+  <h2>Output</h2>
+  <div id="status"></div>
+  <textarea id="outputArea" readonly placeholder="Output will appear here..."></textarea>
+  <button id="copyBtn" disabled>Copy to Clipboard</button>
+
+  <script>
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    document.getElementById('convertBtn').addEventListener('click', async () => {
+      const inputEntry = document.getElementById('inputEntry').value;
+      const outputArea = document.getElementById('outputArea');
+      const statusDiv = document.getElementById('status');
+      const copyBtn = document.getElementById('copyBtn');
+      const convertBtn = document.getElementById('convertBtn');
+
+      if (!inputEntry.trim()) {
+        statusDiv.textContent = "Please paste an entry first.";
+        statusDiv.className = "error";
+        return;
+      }
+
+      statusDiv.textContent = "Fetching sources and converting...";
+      statusDiv.className = "";
+      convertBtn.disabled = true;
+
+      try {
+        const response = await fetch("https://apps.wikitree.com/apps/beacall6/api/space.php?page=Space:Sources-Torrey&appId=Millard-1402");
+        if (!response.ok) throw new Error("Failed to fetch Torrey sources.");
+        let torreySourcesText = await response.text();
+
+        let entry = inputEntry.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+        torreySourcesText = torreySourcesText.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+
+        const outputLine = [];
+        outputLine.push("Torrey's ''New England Marriages to 1700''<ref>Torrey, Clarence Almon. ''[[Space:Torrey’s New England Marriages Prior to 1700|New England Marriages Prior to 1700]]'' (Boston: New England Historic Genealogical Society, 2015)</ref> gives the following summary and citations (expanded using [[Space:Sources-Torrey|Sources-Torrey]]):");
+
+        const entryParts = entry.split('{');
+        outputLine.push("* " + entryParts[0].trim());
+
+        if (entryParts.length < 2) {
+          throw new Error("Invalid entry format (missing '{').");
+        }
+
+        const refsString = entryParts[1].replace(/\}/g, '');
+        const rawRefs = refsString.split(';').map(s => s.trim()).filter(s => s.length > 0);
+        const torreySourcesLines = torreySourcesText.split('\n');
+
+        for (let rawRef of rawRefs) {
+          const refNameMatch = rawRef.split(/\s\d/)[0];
+          const safeRefName = escapeRegExp(refNameMatch);
+          const regexStr = `</li><li>\\s*(?:<span.+?<\\/span>)*\\s*${safeRefName}:`;
+          const regex = new RegExp(regexStr);
+
+          let refSource = "Reference not found. Try a manual search in [[Space:Sources-Torrey|Sources-Torrey]].";
+          
+          for (let line of torreySourcesLines) {
+            const match = line.match(regex);
+            if (match) {
+              refSource = line.substring(match.index + match[0].length).trim();
+              break;
+            }
+          }
+
+          if (refSource !== "Reference not found. Try a manual search in [[Space:Sources-Torrey|Sources-Torrey]]." && /^[Ss]ee /.test(refSource)) {
+            const seeRef = refSource.substring(4).trim();
+            const seeRefName = seeRef.split(/\s\d/)[0];
+            const seeRegex = new RegExp(`</li><li>\\s*${escapeRegExp(seeRefName)}:`);
+            
+            let seeFound = false;
+            for (let line of torreySourcesLines) {
+              const seeMatch = line.match(seeRegex);
+              if (seeMatch) {
+                const seeRefSource = line.substring(seeMatch.index + seeMatch[0].length).trim();
+                refSource = `${refSource}: ${seeRefSource}`;
+                seeFound = true;
+                break;
+              }
+            }
+            if (!seeFound) {
+              refSource = `${refSource}: 'See' reference not found. Try a manual search in [[Space:Sources-Torrey|Sources-Torrey]].`;
+            }
+          }
+
+          refSource = refSource
+            .replace(/<a href="\/wiki\/(.*?)" title.*?">(.*?)<\/a>?/g, '[[$1|$2]]')
+            .replace(/<a href="(.*?)" class.*?">(.*?)<\/a>/g, '[$1 $2]')
+            .replace(/<\/?i>/g, "''")
+            .replace(/<\/?b>/g, "'''")
+            .replace(/&amp;/g, "&");
+
+          outputLine.push(`** ${rawRef}: ${refSource}`);
+        }
+
+        outputArea.value = outputLine.join('\n');
+        statusDiv.textContent = "Conversion complete!";
+        statusDiv.className = "";
+        copyBtn.disabled = false;
+
+      } catch (error) {
+        statusDiv.textContent = "Error: " + error.message;
+        statusDiv.className = "error";
+      } finally {
+        convertBtn.disabled = false;
+      }
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const outputArea = document.getElementById('outputArea');
+      navigator.clipboard.writeText(outputArea.value).then(() => {
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = "Copied to clipboard!";
+        statusDiv.className = "";
+      }).catch(err => {
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = "Failed to copy text.";
+        statusDiv.className = "error";
+      });
+    });
+  </script>
+</body>
+</html>
