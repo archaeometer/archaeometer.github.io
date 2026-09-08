@@ -82,7 +82,7 @@ h1 {color:purple;
         const torreySourcesLines = torreySourcesText.split('\n');
 
         for (let rawRef of rawRefs) {
-          const refNameMatch = rawRef.split(/\s\d+)[0]; // /\s[MDCLXVI\d]+/i
+          const refNameMatch = rawRef.split(/\s\d+/)[0]; /* /\s[MDCLXVI\d]+/i */
           const safeRefName = escapeRegExp(refNameMatch);
           const regexStr = `</li><li>\\s*(?:<span.+?<\\/span>)*\\s*${safeRefName}:`;
           const regex = new RegExp(regexStr,'i');
