@@ -77,7 +77,8 @@ h1 {color:purple;
           throw new Error("Invalid entry format (missing '{').");
         }
 
-        const refsString = entryParts[1].replace(/\}/g, '');
+        const refsString = entryParts[1].replace(/\}/g, '').replace('(,','(#');
+//		refsString = refsString;
         const rawRefs = refsString.split(';').map(s => s.trim()).filter(s => s.length > 0);
         const torreySourcesLines = torreySourcesText.split('\n');
 
